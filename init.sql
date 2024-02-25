@@ -32,3 +32,36 @@ BEGIN
 	FROM clientes;
 END;
 $$; 
+
+-- Cria a função que será chamada pelo trigger
+CREATE OR REPLACE FUNCTION fn_atualiza_saldo() RETURNS 
+TRIGGER AS 
+$$
+BEGIN
+	-- Verifica se é um débito e subtrai o valor do saldo
+	IF NEW.tipo = 'D' THEN
+	UPDATE saldos
+	SET
+	    valor = valor - NEW.valor
+	WHERE
+	    cliente_id = NEW.cliente_id;
+	-- Caso contrário, se for um crédito, adiciona o valor ao saldo
+	ELSIF NEW.tipo = 'C' THEN
+	UPDATE saldos
+	SET
+	    valor = valor + NEW.valor
+	WHERE
+	    cliente_id = NEW.cliente_id;
+END
+	IF;
+	RETURN NEW;
+END;
+$$
+LANGUAGE
+plpgsql; 
+
+-- Cria o trigger que chama a função fn_atualiza_saldo após cada inserção em transacoes
+CREATE TRIGGER trg_atualiza_saldo AFTER
+INSERT
+    ON transacoes FOR EACH ROW
+EXECUTE FUNCTION fn_atualiza_saldo ();

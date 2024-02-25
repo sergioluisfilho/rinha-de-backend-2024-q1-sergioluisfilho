@@ -1,11 +1,11 @@
 import { Router } from "express";
+import { transacao } from "./services/transacao.js";
 const routes = Router();
 
-routes.post("/clientes/:id/transacoes", (req, res) => {
-  res.json({
-    limite: 100000,
-    saldo: -9098,
-  });
+routes.post("/clientes/:id/transacoes", async (req, res) => {
+  const { id } = req.params;
+  const { status, body } = await transacao({ id, body: req.body });
+  res.status(status).json(body);
 });
 
 routes.get("/clientes/:id/extrato", (req, res) => {
